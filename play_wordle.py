@@ -3,11 +3,14 @@ from typing import List
 from letter_state import LetterState
 from wordle import Wordle
 from colorama import Fore
+import random
 
 
 def main():
     # print("hello")
-    wordle = Wordle("APPLE")
+    word_set = load_word_set("/home/zubair/game/new_word.txt")
+    secret = random.choice(list(word_set))
+    wordle = Wordle(secret)
 
     while wordle.can_attempt:
         x = input("\nType your word: ")
@@ -17,7 +20,15 @@ def main():
                   + f"Word must be {wordle.WORD_LENGTH} character"
                   + Fore.RESET
                   )
+            continue
 
+        # print(word_set)
+        if not x.upper() in word_set:
+            print(
+                Fore.RED
+                + f"{x} is not a valid word!"
+                + Fore.RESET
+            )
             continue
 
         wordle.attempt(x)
@@ -27,7 +38,8 @@ def main():
     if wordle.is_solved:
         print("You have solve it")
     else:
-        print("you failed...!!!")
+        print("you have failed...!!!")
+        print(f"the secret word is : {wordle.secret}")
 
 
 def display_result(worlde: Wordle):
@@ -37,10 +49,19 @@ def display_result(worlde: Wordle):
     for word in worlde.attempts:
         result = worlde.guess(word)
         colored_result_str = convert_result_to_color(result)
-        print(colored_result_str)
+        lines.append(colored_result_str)
     for _ in range(worlde.reamining_attempts):
-        print(" ".join(["_"] * worlde.WORD_LENGTH))
+        lines.append(" ".join(["_"] * worlde.WORD_LENGTH))
     draw_border_around(lines)
+
+
+def load_word_set(path: str):
+    word_set = set()
+    with open(path, "r") as f:
+        for line in f.readlines():
+            word = line.strip().upper()
+            word_set.add(word)
+    return word_set
 
 
 def convert_result_to_color(result: List[LetterState]):
@@ -61,8 +82,12 @@ def convert_result_to_color(result: List[LetterState]):
 def draw_border_around(lines: List[str], size: int = 9, pad: int = 1):
     content_length = size + pad * 2
     top_border = "┌" + "─" * content_length + "┐"
-
+    bottom_border = "└" + "─" * content_length + "┘"
+    space = " " * pad
     print(top_border)
+    for line in lines:
+        print("│" + space + line + space + "│")
+    print(bottom_border)
 
 
 if __name__ == "__main__":
